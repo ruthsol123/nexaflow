@@ -11,7 +11,7 @@ export type DemoSession = Pick<DemoAccount, "email" | "role" | "displayName">;
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
-    email: "employer@nexaflow.demo",
+    email: "sarah@nexaflow.demo",
     password: "Employer123!",
     role: "employer",
     displayName: "Sarah",

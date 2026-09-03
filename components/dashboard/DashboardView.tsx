@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MoreHorizontal } from "lucide-react";
-import { useDemoData, employees } from "@/lib/demo-data/DemoDataProvider";
-import { Priority, ProjectStatus, TaskStatus } from "@/lib/demo-data/workspace";
+import { useDemoData } from "@/lib/demo-data/DemoDataProvider";
+import { Priority, ProjectStatus, TaskStatus, Task, employees } from "@/lib/demo-data/workspace";
 import { StatusBadge, TaskIcon } from "@/components/dashboard/DashboardPrimitives";
 import { EmployerProjectsView, EmployerTasksView, EmployerTeamsView } from "@/components/employer/EmployerCrudViews";
 
@@ -26,7 +26,7 @@ export function DashboardView({ role, view, detailType, detailId }: Props) {
   if (view === "employees") return <EmployeesView />;
   if (view === "teams" || view === "team") return role === "employer" ? <EmployerTeamsView /> : <TeamsView role={role} />;
   if (view === "analytics") return <AnalyticsView />;
-  if (view === "notifications") return <NotificationsView employeeId={employee.id} />;
+  if (view === "notifications") return <NotificationsView employeeId={employee.email} />;
   return <SettingsView role={role} />;
 }
 
@@ -143,6 +143,10 @@ function TasksView({ role, tasks }: { role: string; tasks: ReturnType<typeof use
   const [status, setStatus] = useState("All"); 
   const [priority, setPriority] = useState("All"); 
   const filtered = tasks.filter((task) => task.title.toLowerCase().includes(query.toLowerCase()) && (status === "All" || task.status === status) && (priority === "All" || task.priority === priority)).sort((a, b) => a.dueDate.localeCompare(b.dueDate)); 
+  const toggleTaskStatus = (task: Task) => {
+    const newStatus = task.status === "Done" ? "To Do" : "Done";
+    updateTask(task.id, { status: newStatus });
+  };
   return (
     <>
       <Header 
@@ -182,13 +186,22 @@ function TasksView({ role, tasks }: { role: string; tasks: ReturnType<typeof use
             className="grid gap-3 border-b border-[#10213b]/8 px-5 py-4 last:border-0 md:grid-cols-[1.5fr_1fr_.7fr_.8fr_1fr] md:items-center" 
             key={task.id}
           >
-            <Link 
-              className="flex items-center gap-3 font-medium hover:text-cyan-700" 
-              href={`${role === "employer" ? "/dashboard/employer" : "/dashboard/employee"}/tasks/${task.id}`}
-            >
-              <TaskIcon status={task.status} />
-              {task.title}
-            </Link>
+            <div className="flex items-center gap-3">
+              <button 
+                type="button"
+                className="cursor-pointer hover:opacity-70" 
+                onClick={() => toggleTaskStatus(task)}
+                aria-label={task.status === "Done" ? "Mark as incomplete" : "Mark as complete"}
+              >
+                <TaskIcon status={task.status} />
+              </button>
+              <Link 
+                className="font-medium hover:text-cyan-700" 
+                href={`${role === "employer" ? "/dashboard/employer" : "/dashboard/employee"}/tasks/${task.id}`}
+              >
+                {task.title}
+              </Link>
+            </div>
             <span className="text-xs text-slate-500">{projects.find((project) => project.id === task.projectId)?.name}</span>
             <StatusBadge status={task.priority} />
             <select 
@@ -360,13 +373,21 @@ function AnalyticsView() {
 }
 
 function DetailView({ type, id, role }: { type: "project" | "task" | "employee" | "team"; id: string; role: string }) { 
-  const { projects, tasks, teams, updateTask, activity } = useDemoData(); 
+  const { projects, tasks, teams, updateTask, updateChecklistItem, activity } = useDemoData(); 
   const project = projects.find((item) => item.id === id); 
   const task = tasks.find((item) => item.id === id); 
   const employee = employees.find((item) => item.id === id); 
   const team = teams.find((item) => item.id === id); 
   if (type === "team" && team) return (
     <>
+      <div className="mb-4">
+        <Link 
+          className="inline-flex items-center text-sm text-cyan-700 hover:underline" 
+          href={`${role === "employer" ? "/dashboard/employer" : "/dashboard/employee"}/team`}
+        >
+          ← {role === "employer" ? "Back to Teams" : "Back to My Team"}
+        </Link>
+      </div>
       <Header 
         eyebrow="Team detail" 
         subtitle={`${team.name} · led by ${employees.find((person) => person.id === team.leadId)?.name}`} 
@@ -396,6 +417,14 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
   ); 
   if (type === "project" && project) return (
     <>
+      <div className="mb-4">
+        <Link 
+          className="inline-flex items-center text-sm text-cyan-700 hover:underline" 
+          href={`${role === "employer" ? "/dashboard/employer" : "/dashboard/employee"}/projects`}
+        >
+          ← {role === "employer" ? "Back to Projects" : "Back to My Projects"}
+        </Link>
+      </div>
       <Header 
         eyebrow="Project detail" 
         subtitle={project.description} 
@@ -415,7 +444,17 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
           {tasks.filter((task) => task.projectId === project.id).map((task) => (
             <div key={task.id} className="flex items-center justify-between rounded border border-[#10213b]/10 p-3 text-sm">
               <div className="flex items-center gap-2">
-                <TaskIcon status={task.status} />
+                <button 
+                  type="button"
+                  className="cursor-pointer hover:opacity-70" 
+                  onClick={() => {
+                    const newStatus = task.status === "Done" ? "To Do" : "Done";
+                    updateTask(task.id, { status: newStatus });
+                  }}
+                  aria-label={task.status === "Done" ? "Mark as incomplete" : "Mark as complete"}
+                >
+                  <TaskIcon status={task.status} />
+                </button>
                 <span>{task.title}</span>
               </div>
               <StatusBadge status={task.priority} />
@@ -427,6 +466,14 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
   ); 
   if (type === "task" && task) return (
     <>
+      <div className="mb-4">
+        <Link 
+          className="inline-flex items-center text-sm text-cyan-700 hover:underline" 
+          href={`${role === "employer" ? "/dashboard/employer" : "/dashboard/employee"}/tasks`}
+        >
+          ← {role === "employer" ? "Back to Tasks" : "Back to My Tasks"}
+        </Link>
+      </div>
       <Header 
         eyebrow="Task detail" 
         subtitle={task.description} 
@@ -446,6 +493,31 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
           <div>
             <h3 className="text-sm font-semibold">Project</h3>
             <p className="mt-2 text-sm text-slate-500">{projects.find((project) => project.id === task.projectId)?.name}</p>
+          </div>
+        </div>
+        <div className="mt-8">
+          <h3 className="text-sm font-semibold">Checklist</h3>
+          <div className="mt-3 space-y-2">
+            {(task.checklist || []).map((item) => (
+              <label 
+                key={item.id} 
+                className="flex items-center gap-3 rounded border border-[#10213b]/10 p-3 text-sm hover:bg-slate-50 cursor-pointer"
+              >
+                <input 
+                  type="checkbox" 
+                  checked={item.completed} 
+                  onChange={(e) => {
+                    updateChecklistItem(task.id, item.id, e.target.checked);
+                    const allCompleted = (task.checklist || []).every((i) => i.id === item.id ? e.target.checked : i.completed);
+                    if (allCompleted && task.status !== "Done") {
+                      updateTask(task.id, { status: "Done" });
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-[#10213b]/20 text-cyan-600 focus:ring-cyan-500"
+                />
+                <span className={item.completed ? "line-through text-slate-400" : ""}>{item.text}</span>
+              </label>
+            ))}
           </div>
         </div>
       </section>
@@ -485,8 +557,14 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
 }
 
 function NotificationsView({ employeeId }: { employeeId: string }) { 
-  const { notifications, markNotificationRead } = useDemoData(); 
+  const { notifications, markNotificationRead, markAllNotificationsRead } = useDemoData(); 
   const visible = notifications.filter((notification) => notification.employeeId === employeeId); 
+  
+  // Mark all notifications as read when viewing the page
+  useEffect(() => {
+    markAllNotificationsRead(employeeId);
+  }, [employeeId, markAllNotificationsRead]);
+  
   return (
     <>
       <Header 

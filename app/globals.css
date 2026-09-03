@@ -90,6 +90,12 @@ textarea:focus-visible {
 	outline-offset: 2px;
 }
 
+/* Dropdown/Select styling */
+select option {
+	background-color: #10213b;
+	color: white;
+}
+
 /* Smooth transitions for theme switching */
 * {
 	transition-property: color, background-color, border-color;
