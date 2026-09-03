@@ -48,6 +48,11 @@ export const notifications: Notification[] = [
     { id: "n6", employeeId: "employee@nexaflow.demo", message: "A project deadline changed", detail: "NexaFlow Website is due Aug 30", read: true, createdAt: "Aug 18" },
     { id: "n7", employeeId: "sarah@nexaflow.demo", message: "Team update available", detail: "Weekly project summaries are ready", read: false, createdAt: "Today" },
     { id: "n8", employeeId: "sarah@nexaflow.demo", message: "Alex Morgan completed a task", detail: "Build dashboard components in NexaFlow Website", read: true, createdAt: "Yesterday" },
+    { id: "n9", employeeId: "employee@nexaflow.demo", message: "Alex completed the task Fix mobile navigation", detail: "Mobile Application · Completed by Alex Morgan", read: true, createdAt: "Aug 17" },
+    { id: "n10", employeeId: "employee@nexaflow.demo", message: "A new task was assigned to you", detail: "Q3 launch checklist · NexaFlow Website", read: false, createdAt: "45 minutes ago" },
+    { id: "n11", employeeId: "employee@nexaflow.demo", message: "Daniel was added to the Engineering team", detail: "Engineering · Daniel Kim is now a team member", read: true, createdAt: "Aug 15" },
+    { id: "n12", employeeId: "employee@nexaflow.demo", message: "The task Q3 launch checklist moved to In Progress", detail: "NexaFlow Website · Updated by Sarah Johnson", read: false, createdAt: "10 minutes ago" },
+    { id: "n13", employeeId: "employee@nexaflow.demo", message: "A project was created", detail: "Customer onboarding refresh · Created by Sarah Johnson", read: true, createdAt: "Aug 12" },
 ];
 export const activity: Activity[] = [
   { id: "a1", actorId: "alex", message: "completed a task in NexaFlow Website", projectId: "website", createdAt: "Today" },

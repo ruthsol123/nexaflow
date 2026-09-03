@@ -14,10 +14,9 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   const [taskState, setTaskState] = useState(() => readStored("nexaflow-tasks", initialTasks));
   const [teamState, setTeamState] = useState(() => readStored("nexaflow-teams", initialTeams));
   const [notificationState, setNotificationState] = useState(() => {
-    if (typeof window === "undefined") return initialNotifications;
-    const stored = window.localStorage.getItem("nexaflow-notifications");
-    if (!stored) return initialNotifications;
-    try { return JSON.parse(stored) as Notification[]; } catch { return initialNotifications; }
+    const stored = readStored("nexaflow-notifications", initialNotifications);
+    const storedIds = new Set(stored.map((notification) => notification.id));
+    return [...stored, ...initialNotifications.filter((notification) => !storedIds.has(notification.id))];
   });
   function persist<T>(key: string, items: T[]) { window.localStorage.setItem(key, JSON.stringify(items)); }
   function createProject(project: Omit<Project, "id">) { const created = { ...project, id: makeId("project") }; setProjectState((items) => { const next = [...items, created]; persist("nexaflow-projects", next); return next; }); return created; }
