@@ -301,7 +301,7 @@ function TeamsView({ role }: { role: string }) {
               <p className="mt-2 text-xs text-slate-500">Lead: {employees.find((person) => person.id === team.leadId)?.name}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {team.memberIds.map((id) => (
-                  <span className="rounded bg-slate-100 px-2 py-1 text-xs" key={id}>
+                  <span className="rounded bg-[#d7eef2] px-2 py-1 text-xs font-medium text-slate-900 dark:bg-[#183548] dark:text-cyan-100" key={id}>
                     {employees.find((person) => person.id === id)?.name}
                   </span>
                 ))}

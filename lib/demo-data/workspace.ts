@@ -35,16 +35,19 @@ export const tasks: Task[] = [
 export const teams: Team[] = [
   { id: "executive", name: "Executive", description: "Lead the company vision and strategy.", leadId: "sarah", memberIds: ["sarah"], projectIds: ["website", "mobile", "travel", "migration"] },
   { id: "engineering", name: "Engineering", description: "Build and maintain the NexaFlow product.", leadId: "daniel", memberIds: ["alex", "daniel"], projectIds: ["website", "mobile", "migration"] },
-  { id: "design", name: "Design", description: "Shape a clear, thoughtful product experience.", leadId: "maya", memberIds: ["maya"], projectIds: ["website", "mobile", "travel"] },
+  { id: "design", name: "Product Design", description: "Shape a clear, thoughtful product experience.", leadId: "maya", memberIds: ["alex", "maya", "jordan"], projectIds: ["website", "mobile", "travel"] },
   { id: "product", name: "Product", description: "Connect customer needs to focused delivery.", leadId: "riley", memberIds: ["riley"], projectIds: ["travel"] },
-  { id: "marketing", name: "Marketing", description: "Help modern teams discover NexaFlow.", leadId: "jordan", memberIds: ["jordan"], projectIds: ["website"] },
+  { id: "marketing", name: "Marketing", description: "Help modern teams discover NexaFlow.", leadId: "jordan", memberIds: ["alex", "jordan", "riley"], projectIds: ["website", "travel"] },
 ];
 export const notifications: Notification[] = [
   { id: "n1", employeeId: "employee@nexaflow.demo", message: "You were assigned a new task", detail: "Build dashboard components", read: false, createdAt: "Today" },
-  { id: "n2", employeeId: "employee@nexaflow.demo", message: "A project deadline changed", detail: "NexaFlow Website is due Aug 30", read: false, createdAt: "Yesterday" },
-  { id: "n3", employeeId: "employee@nexaflow.demo", message: "Sarah commented on your task", detail: "Looks ready for the next review.", read: true, createdAt: "Aug 21" },
-  { id: "n4", employeeId: "employee@nexaflow.demo", message: "Your task moved to Review", detail: "Fix mobile navigation", read: true, createdAt: "Aug 20" },
-  { id: "n5", employeeId: "sarah@nexaflow.demo", message: "Team update available", detail: "Weekly project summaries are ready", read: false, createdAt: "Today" },
+    { id: "n2", employeeId: "employee@nexaflow.demo", message: "Your task moved to In Progress", detail: "Implement authentication in NexaFlow Website", read: false, createdAt: "2 hours ago" },
+    { id: "n3", employeeId: "employee@nexaflow.demo", message: "Maya Chen completed a task", detail: "Share design review in Mobile Application", read: true, createdAt: "Yesterday" },
+    { id: "n4", employeeId: "employee@nexaflow.demo", message: "A new project was created", detail: "Travel Platform is now ready for team planning", read: true, createdAt: "Aug 21" },
+    { id: "n5", employeeId: "employee@nexaflow.demo", message: "Daniel Kim joined your team", detail: "Engineering now has a new backend contributor", read: true, createdAt: "Aug 20" },
+    { id: "n6", employeeId: "employee@nexaflow.demo", message: "A project deadline changed", detail: "NexaFlow Website is due Aug 30", read: true, createdAt: "Aug 18" },
+    { id: "n7", employeeId: "sarah@nexaflow.demo", message: "Team update available", detail: "Weekly project summaries are ready", read: false, createdAt: "Today" },
+    { id: "n8", employeeId: "sarah@nexaflow.demo", message: "Alex Morgan completed a task", detail: "Build dashboard components in NexaFlow Website", read: true, createdAt: "Yesterday" },
 ];
 export const activity: Activity[] = [
   { id: "a1", actorId: "alex", message: "completed a task in NexaFlow Website", projectId: "website", createdAt: "Today" },
