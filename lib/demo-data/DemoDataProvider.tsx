@@ -14,7 +14,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   const [taskState, setTaskState] = useState(() => readStored("nexaflow-tasks", initialTasks));
   const [teamState, setTeamState] = useState(() => readStored("nexaflow-teams", initialTeams));
   const [notificationState, setNotificationState] = useState(() => {
-    const stored = readStored("nexaflow-notifications", initialNotifications);
+    const stored = readStored("nexaflow-notifications", initialNotifications).map((notification) => notification.employeeId === "sarah@nexaflow.demo" ? { ...notification, employeeId: "employer@nexaflow.demo" } : notification);
     const storedIds = new Set(stored.map((notification) => notification.id));
     return [...stored, ...initialNotifications.filter((notification) => !storedIds.has(notification.id))];
   });

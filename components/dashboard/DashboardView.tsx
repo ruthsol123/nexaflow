@@ -26,7 +26,7 @@ export function DashboardView({ role, view, detailType, detailId }: Props) {
   if (view === "employees") return <EmployeesView />;
   if (view === "teams" || view === "team") return role === "employer" ? <EmployerTeamsView /> : <TeamsView role={role} />;
   if (view === "analytics") return <AnalyticsView />;
-  if (view === "notifications") return <NotificationsView employeeId={employee.email} />;
+  if (view === "notifications") return <NotificationsView employeeId={role === "employer" ? "employer@nexaflow.demo" : employee.email} />;
   return <SettingsView role={role} />;
 }
 
