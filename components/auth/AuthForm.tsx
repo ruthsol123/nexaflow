@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Layers3 } from "lucide-react";
-import { DEMO_ACCOUNTS, saveDemoSession } from "@/lib/auth/demo-auth";
+import { DEMO_ACCOUNTS, getDemoAccounts, saveDemoSession } from "@/lib/auth/demo-auth";
 
 type AuthMode = "login" | "signup";
 
@@ -98,7 +98,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
-    const account = DEMO_ACCOUNTS.find((demoAccount) => demoAccount.email === email && demoAccount.password === password);
+    const account = getDemoAccounts().find((demoAccount) => demoAccount.email === email && demoAccount.password === password);
     if (!isSignup && !account) {
       setError("Invalid email or password.");
       return;

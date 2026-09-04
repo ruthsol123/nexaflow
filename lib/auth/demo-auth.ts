@@ -25,6 +25,26 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
 ];
 
 const SESSION_KEY = "nexaflow-demo-session";
+const CREATED_ACCOUNTS_KEY = "nexaflow-demo-accounts";
+
+export function getDemoAccounts(): DemoAccount[] {
+  if (typeof window === "undefined") return DEMO_ACCOUNTS;
+  const rawAccounts = window.localStorage.getItem(CREATED_ACCOUNTS_KEY);
+  if (!rawAccounts) return DEMO_ACCOUNTS;
+  try {
+    const createdAccounts = JSON.parse(rawAccounts) as DemoAccount[];
+    return [...DEMO_ACCOUNTS, ...createdAccounts];
+  } catch {
+    window.localStorage.removeItem(CREATED_ACCOUNTS_KEY);
+    return DEMO_ACCOUNTS;
+  }
+}
+
+export function saveDemoAccount(account: DemoAccount) {
+  if (typeof window === "undefined") return;
+  const createdAccounts = getDemoAccounts().filter((item) => !DEMO_ACCOUNTS.some((demoAccount) => demoAccount.email === item.email));
+  window.localStorage.setItem(CREATED_ACCOUNTS_KEY, JSON.stringify([...createdAccounts, account]));
+}
 
 export function saveDemoSession(account: DemoAccount) {
   if (typeof window === "undefined") return;

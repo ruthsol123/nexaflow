@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { FormEvent, ReactNode, useState, useEffect } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { useDemoData } from "@/lib/demo-data/DemoDataProvider";
-import { Priority, ProjectStatus, TaskStatus, Task, employees } from "@/lib/demo-data/workspace";
+import { Employee, Priority, ProjectStatus, TaskStatus, Task, employees } from "@/lib/demo-data/workspace";
 import { StatusBadge, TaskIcon } from "@/components/dashboard/DashboardPrimitives";
 import { EmployerProjectsView, EmployerTasksView, EmployerTeamsView } from "@/components/employer/EmployerCrudViews";
 
@@ -30,7 +30,7 @@ export function DashboardView({ role, view, detailType, detailId }: Props) {
   return <SettingsView role={role} />;
 }
 
-function Header({ eyebrow, subtitle }: { eyebrow: string; subtitle: string }) { const heading = eyebrow === "Organization" ? "Good morning, Sarah" : eyebrow === "Your workspace" ? "Good morning, Alex" : eyebrow; return <div className="mb-6 sm:mb-8"><p className="mb-2 text-xs font-semibold uppercase tracking-[.16em] text-[#198ca4]">{eyebrow}</p><h1 className="display-font text-3xl tracking-tight text-[#10213b] sm:text-4xl lg:text-5xl">{heading}</h1><p className="mt-2 text-sm text-slate-500 sm:mt-3">{subtitle}</p></div>; }
+function Header({ eyebrow, subtitle, action }: { eyebrow: string; subtitle: string; action?: ReactNode }) { const heading = eyebrow === "Organization" ? "Good morning, Sarah" : eyebrow === "Your workspace" ? "Good morning, Alex" : eyebrow; return <div className="mb-6 flex flex-wrap items-start justify-between gap-4 sm:mb-8"><div><p className="mb-2 text-xs font-semibold uppercase tracking-[.16em] text-[#198ca4]">{eyebrow}</p><h1 className="display-font text-3xl tracking-tight text-[#10213b] sm:text-4xl lg:text-5xl">{heading}</h1><p className="mt-2 text-sm text-slate-500 sm:mt-3">{subtitle}</p></div>{action}</div>; }
 function StatCards({ items }: { items: [string, number][] }) { return <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">{items.map(([label, value]) => <div className={card} key={label}><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-xl font-semibold text-[#10213b] sm:mt-3 sm:text-2xl">{value}</p></div>)}</div>; }
 function Progress({ value }: { value: number }) { return <div className="mt-3 h-1.5 rounded-full bg-slate-100"><div className="h-1.5 rounded-full bg-[#4bb7c8]" style={{ width: `${value}%` }} /></div>; }
 
@@ -222,14 +222,17 @@ function TasksView({ role, tasks }: { role: string; tasks: ReturnType<typeof use
 }
 
 function EmployeesView() { 
-  const { tasks, projects } = useDemoData(); 
+  const { employees: employeeState, tasks, projects, createEmployee } = useDemoData(); 
   const [query, setQuery] = useState(""); 
-  const filtered = employees.filter((employee) => employee.name.toLowerCase().includes(query.toLowerCase()) || employee.department.toLowerCase().includes(query.toLowerCase())); 
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [toast, setToast] = useState("");
+  const filtered = employeeState.filter((employee) => employee.name.toLowerCase().includes(query.toLowerCase()) || employee.department.toLowerCase().includes(query.toLowerCase())); 
   return (
     <>
       <Header 
         eyebrow="Employees" 
         subtitle="Shared visibility across your organization." 
+        action={<button className="rounded-lg bg-[#10213b] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#1c3557]" onClick={() => setShowCreateForm(true)}>+ Add Employee</button>}
       />
       <input 
         className={`${input} mb-4 w-full max-w-sm sm:mb-5`} 
@@ -267,8 +270,31 @@ function EmployeesView() {
           ))}
         </div>
       )}
+      {showCreateForm && <CreateEmployeeForm employees={employeeState} createEmployee={createEmployee} onCancel={() => setShowCreateForm(false)} onCreated={() => { setShowCreateForm(false); setToast("Employee created successfully."); window.setTimeout(() => setToast(""), 2400); }} />}
+      {toast && <p className="fixed bottom-5 right-5 z-50 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-medium text-white shadow-lg" role="status">{toast}</p>}
     </>
   );
+}
+
+function CreateEmployeeForm({ employees, createEmployee, onCancel, onCreated }: { employees: Employee[]; createEmployee: (employee: Omit<Employee, "id">, password: string) => Employee; onCancel: () => void; onCreated: () => void }) {
+  const [error, setError] = useState("");
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const email = String(form.get("email") ?? "").trim().toLowerCase();
+    const password = String(form.get("password") ?? "");
+    const confirmPassword = String(form.get("confirmPassword") ?? "");
+    const title = String(form.get("title") ?? "").trim();
+    if (!name || !email || !password || !confirmPassword || !title) return setError("All fields are required.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Please enter a valid email address.");
+    if (employees.some((employee) => employee.email.toLowerCase() === email)) return setError("An employee with this email already exists.");
+    if (password.length < 8) return setError("Password must be at least 8 characters.");
+    if (password !== confirmPassword) return setError("Passwords do not match.");
+    createEmployee({ name, email, title, department: "General", status: "Active", teamId: "" }, password);
+    onCreated();
+  }
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07111f]/55 p-4" role="dialog" aria-modal="true" aria-labelledby="create-employee-title"><section className="w-full max-w-lg rounded-xl border border-[#10213b]/10 bg-white p-5 shadow-2xl sm:p-6"><div className="flex items-center justify-between gap-4"><h2 id="create-employee-title" className="text-xl font-semibold text-[#10213b]">Add Employee</h2><button onClick={onCancel} aria-label="Close dialog" className="text-2xl text-slate-400">×</button></div><form className="mt-5 grid gap-4" onSubmit={submit}><label className="text-xs font-medium text-slate-600">Full name<input className={input} name="name" required /></label><label className="text-xs font-medium text-slate-600">Email<input className={input} name="email" type="email" required /></label><label className="text-xs font-medium text-slate-600">Password<input className={input} name="password" type="password" minLength={8} required /></label><label className="text-xs font-medium text-slate-600">Confirm password<input className={input} name="confirmPassword" type="password" minLength={8} required /></label><label className="text-xs font-medium text-slate-600">Role / position<input className={input} name="title" required /></label>{error && <p className="text-sm text-rose-600" role="alert">{error}</p>}<div className="flex justify-end gap-3"><button type="button" className="rounded-lg border border-[#10213b]/15 px-3 py-2 text-sm font-semibold text-[#10213b] hover:bg-slate-50" onClick={onCancel}>Cancel</button><button type="submit" className="rounded-lg bg-[#10213b] px-3 py-2 text-sm font-semibold text-white hover:bg-[#1c3557]">Create Employee</button></div></form></section></div>;
 }
 
 function TeamsView({ role }: { role: string }) { 
