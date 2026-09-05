@@ -2,9 +2,9 @@
 
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { saveDemoAccount } from "@/lib/auth/demo-auth";
-import { activity as initialActivity, Activity, employees as initialEmployees, Employee, notifications as initialNotifications, Notification, projects as initialProjects, Project, tasks as initialTasks, Task, teams as initialTeams, Team } from "@/lib/demo-data/workspace";
+import { activity as initialActivity, Activity, employees as initialEmployees, Employee, notifications as initialNotifications, Notification, projects as initialProjects, Project, tasks as initialTasks, Task, teams as initialTeams, Team, TaskReviewStatus } from "@/lib/demo-data/workspace";
 
-type DemoDataContextValue = { employees: Employee[]; projects: Project[]; tasks: Task[]; teams: Team[]; notifications: Notification[]; activity: Activity[]; createEmployee: (employee: Omit<Employee, "id">, password: string) => Employee; createProject: (project: Omit<Project, "id">) => Project; updateProject: (id: string, changes: Partial<Project>) => void; deleteProject: (id: string) => void; createTask: (task: Omit<Task, "id">) => Task; updateTask: (id: string, changes: Partial<Task>) => void; deleteTask: (id: string) => void; updateChecklistItem: (taskId: string, checklistItemId: string, completed: boolean) => void; createTeam: (team: Omit<Team, "id">) => Team; updateTeam: (id: string, changes: Partial<Team>) => void; deleteTeam: (id: string) => void; createNotification: (notification: Omit<Notification, "id">) => Notification; markNotificationRead: (id: string) => void; markAllNotificationsRead: (employeeId: string) => void; getUnreadNotificationCount: (employeeId: string) => number };
+type DemoDataContextValue = { employees: Employee[]; projects: Project[]; tasks: Task[]; teams: Team[]; notifications: Notification[]; activity: Activity[]; createEmployee: (employee: Omit<Employee, "id">, password: string) => Employee; createProject: (project: Omit<Project, "id">) => Project; updateProject: (id: string, changes: Partial<Project>) => void; deleteProject: (id: string) => void; createTask: (task: Omit<Task, "id">) => Task; updateTask: (id: string, changes: Partial<Task>) => void; reviewTask: (id: string, decision: Exclude<TaskReviewStatus, "pending">, reviewerId: string, feedback?: string) => void; deleteTask: (id: string) => void; updateChecklistItem: (taskId: string, checklistItemId: string, completed: boolean) => void; createTeam: (team: Omit<Team, "id">) => Team; updateTeam: (id: string, changes: Partial<Team>) => void; deleteTeam: (id: string) => void; createNotification: (notification: Omit<Notification, "id">) => Notification; markNotificationRead: (id: string) => void; markAllNotificationsRead: (employeeId: string) => void; getUnreadNotificationCount: (employeeId: string) => number };
 const DemoDataContext = createContext<DemoDataContextValue | null>(null);
 
 function readStored<T>(key: string, fallback: T): T { if (typeof window === "undefined") return fallback; const stored = window.localStorage.getItem(key); if (!stored) return fallback; try { return JSON.parse(stored) as T; } catch { return fallback; } }
@@ -31,16 +31,51 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   function createTask(task: Omit<Task, "id">) { const created = { ...task, id: makeId("task") }; setTaskState((items) => { const next = [...items, created]; persist("nexaflow-tasks", next); return next; }); return created; }
   function syncProjectProgress(nextTasks: Task[]) { setProjectState((items) => { const next = items.map((project) => ({ ...project, progress: calculateProgress(project.id, nextTasks) })); persist("nexaflow-projects", next); return next; }); }
   function updateTask(id: string, changes: Partial<Task>) {
+    const now = new Date().toISOString();
     const next = taskState.map((task) => {
       if (task.id !== id) return task;
       const updated = { ...task, ...changes };
-      if (updated.status === "Done") updated.completedBy = changes.completedBy ?? task.completedBy ?? task.assigneeId;
-      else delete updated.completedBy;
+      if (updated.status === "Done" && task.status !== "Done") {
+        updated.completedBy = changes.completedBy ?? task.assigneeId;
+        updated.completedAt = changes.completedAt ?? now;
+        updated.reviewStatus = "pending";
+        delete updated.reviewedBy;
+        delete updated.reviewedAt;
+        delete updated.reviewFeedback;
+      } else if (updated.status !== "Done") {
+        delete updated.completedBy;
+        delete updated.completedAt;
+        delete updated.reviewedBy;
+        delete updated.reviewedAt;
+        delete updated.reviewFeedback;
+      }
       return updated;
     });
     setTaskState(next);
     persist("nexaflow-tasks", next);
     syncProjectProgress(next);
+  }
+  function reviewTask(id: string, decision: Exclude<TaskReviewStatus, "pending">, reviewerId: string, feedback?: string) {
+    const task = taskState.find((item) => item.id === id);
+    if (!task) return;
+    const reviewer = employeeState.find((employee) => employee.id === reviewerId);
+    const project = projectState.find((item) => item.id === task.projectId);
+    const now = new Date().toISOString();
+    const next = taskState.map((item) => item.id !== id ? item : decision === "approved"
+      ? { ...item, status: "Done" as const, reviewStatus: "approved" as const, reviewedBy: reviewerId, reviewedAt: now, reviewFeedback: feedback || undefined }
+      : { ...item, status: "In Progress" as const, reviewStatus: "changes_requested" as const, reviewedBy: reviewerId, reviewedAt: now, reviewFeedback: feedback || undefined, completedBy: undefined, completedAt: undefined });
+    setTaskState(next);
+    persist("nexaflow-tasks", next);
+    syncProjectProgress(next);
+    createNotification({
+      employeeId: employeeState.find((employee) => employee.id === task.assigneeId)?.email ?? task.assigneeId,
+      message: decision === "approved" ? `Your task '${task.title}' was approved by ${reviewer?.name ?? "the employer"}.` : `Your task '${task.title}' needs changes. Please review the employer's feedback.`,
+      detail: `${project?.name ?? "Project"}${feedback ? ` · Feedback: ${feedback}` : ""}`,
+      read: false,
+      createdAt: "Today",
+      taskId: task.id,
+      action: "view",
+    });
   }
   function updateChecklistItem(taskId: string, checklistItemId: string, completed: boolean) { setTaskState((items) => { const next = items.map((task) => task.id === taskId ? { ...task, checklist: task.checklist.map((item) => item.id === checklistItemId ? { ...item, completed } : item) } : task); persist("nexaflow-tasks", next); return next; }); }
   function deleteTask(id: string) { const next = taskState.filter((task) => task.id !== id); setTaskState(next); persist("nexaflow-tasks", next); syncProjectProgress(next); }
@@ -51,7 +86,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   const markAllNotificationsRead = useCallback((employeeId: string) => { setNotificationState((items) => { const nextItems = items.map((notification) => notification.employeeId === employeeId ? { ...notification, read: true } : notification); if (nextItems.some((notification, index) => notification.read !== items[index].read)) window.localStorage.setItem("nexaflow-notifications", JSON.stringify(nextItems)); return nextItems; }); }, []);
   function createNotification(notification: Omit<Notification, "id">) { const created = { ...notification, id: makeId("notification") }; setNotificationState((items) => { const next = [...items, created]; window.localStorage.setItem("nexaflow-notifications", JSON.stringify(next)); return next; }); return created; }
   function getUnreadNotificationCount(employeeId: string) { return notificationState.filter((notification) => notification.employeeId === employeeId && !notification.read).length; }
-  return <DemoDataContext.Provider value={{ employees: employeeState, projects: projectState, tasks: taskState, teams: teamState, notifications: notificationState, activity: initialActivity, createEmployee, createProject, updateProject, deleteProject, createTask, updateTask, deleteTask, updateChecklistItem, createTeam, updateTeam, deleteTeam, createNotification, markNotificationRead, markAllNotificationsRead, getUnreadNotificationCount }}>{children}</DemoDataContext.Provider>;
+  return <DemoDataContext.Provider value={{ employees: employeeState, projects: projectState, tasks: taskState, teams: teamState, notifications: notificationState, activity: initialActivity, createEmployee, createProject, updateProject, deleteProject, createTask, updateTask, reviewTask, deleteTask, updateChecklistItem, createTeam, updateTeam, deleteTeam, createNotification, markNotificationRead, markAllNotificationsRead, getUnreadNotificationCount }}>{children}</DemoDataContext.Provider>;
 }
 
 export function useDemoData() { const context = useContext(DemoDataContext); if (!context) throw new Error("useDemoData must be used within DemoDataProvider"); return context; }
