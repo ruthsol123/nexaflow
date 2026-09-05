@@ -137,15 +137,37 @@ function ProjectsView({ role, projects, tasks }: { role: string; projects: Retur
   );
 }
 
-function TasksView({ role, tasks }: { role: string; tasks: ReturnType<typeof useDemoData>["tasks"] }) { 
-  const { projects, updateTask } = useDemoData(); 
-  const [query, setQuery] = useState(""); 
-  const [status, setStatus] = useState("All"); 
-  const [priority, setPriority] = useState("All"); 
-  const filtered = tasks.filter((task) => task.title.toLowerCase().includes(query.toLowerCase()) && (status === "All" || task.status === status) && (priority === "All" || task.priority === priority)).sort((a, b) => a.dueDate.localeCompare(b.dueDate)); 
+function TasksView({ role, tasks }: { role: string; tasks: ReturnType<typeof useDemoData>["tasks"] }) {
+  const { projects, updateTask, createNotification } = useDemoData();
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("All");
+  const [priority, setPriority] = useState("All");
+  const filtered = tasks.filter((task) => task.title.toLowerCase().includes(query.toLowerCase()) && (status === "All" || task.status === status) && (priority === "All" || task.priority === priority)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const toggleTaskStatus = (task: Task) => {
     const newStatus = task.status === "Done" ? "To Do" : "Done";
+    const previousStatus = task.status;
     updateTask(task.id, { status: newStatus });
+
+    // Create notification for employer when employee changes task status
+    if (role === "employee") {
+      const employee = employees.find((e) => e.id === task.assigneeId);
+      let message = "";
+      const detail = task.title;
+
+      if (newStatus === "Done") {
+        message = `${employee?.name || "An employee"} completed '${task.title}'.`;
+      } else {
+        message = `${employee?.name || "An employee"} moved '${task.title}' from ${previousStatus} to ${newStatus}.`;
+      }
+
+      createNotification({
+        employeeId: "employer@nexaflow.demo",
+        message,
+        detail,
+        read: false,
+        createdAt: "Today"
+      });
+    }
   };
   return (
     <>
@@ -398,12 +420,12 @@ function AnalyticsView() {
   );
 }
 
-function DetailView({ type, id, role }: { type: "project" | "task" | "employee" | "team"; id: string; role: string }) { 
-  const { projects, tasks, teams, updateTask, updateChecklistItem, activity } = useDemoData(); 
-  const project = projects.find((item) => item.id === id); 
-  const task = tasks.find((item) => item.id === id); 
-  const employee = employees.find((item) => item.id === id); 
-  const team = teams.find((item) => item.id === id); 
+function DetailView({ type, id, role }: { type: "project" | "task" | "employee" | "team"; id: string; role: string }) {
+  const { projects, tasks, teams, employees: employeeState, updateTask, updateChecklistItem } = useDemoData();
+  const project = projects.find((item) => item.id === id);
+  const task = tasks.find((item) => item.id === id);
+  const employee = employeeState.find((item) => item.id === id);
+  const team = teams.find((item) => item.id === id);
   if (type === "team" && team) return (
     <>
       <div className="mb-4">
@@ -416,12 +438,12 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
       </div>
       <Header 
         eyebrow="Team detail" 
-        subtitle={`${team.name} · led by ${employees.find((person) => person.id === team.leadId)?.name}`} 
+        subtitle={`${team.name} · led by ${employeeState.find((person) => person.id === team.leadId)?.name}`}
       />
       <section className={card}>
         <h2 className="text-2xl font-semibold">{team.name}</h2>
         <h3 className="mt-8 text-sm font-semibold">Members</h3>
-        <p className="mt-3 text-sm text-slate-500">{team.memberIds.map((memberId) => employees.find((person) => person.id === memberId)?.name).join(" · ")}</p>
+        <p className="mt-3 text-sm text-slate-500">{team.memberIds.map((memberId) => employeeState.find((person) => person.id === memberId)?.name).join(" · ")}</p>
         <h3 className="mt-8 text-sm font-semibold">Projects</h3>
         <div className="mt-3 space-y-2">
           {team.projectIds.map((projectId) => { 
@@ -441,7 +463,25 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
       </section>
     </>
   ); 
-  if (type === "project" && project) return (
+  if (type === "project" && project) {
+    const projectTasks = tasks.filter((task) => task.projectId === project.id);
+    const completedTasks = projectTasks.filter((task) => task.status === "Done").length;
+    const calculatedProgress = projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0;
+    const participatingEmployees = employeeState
+      .filter((person) => project.memberIds.includes(person.id) || projectTasks.some((item) => item.assigneeId === person.id))
+      .map((person) => {
+        const assignedTasks = projectTasks.filter((item) => item.assigneeId === person.id);
+        const completed = assignedTasks.filter((item) => item.status === "Done").length;
+        return { person, assignedTasks, completed, remaining: assignedTasks.length - completed, percentage: assignedTasks.length ? Math.round(completed / assignedTasks.length * 100) : 0 };
+      })
+      .sort((a, b) => b.percentage - a.percentage || a.person.name.localeCompare(b.person.name));
+    const taskGroups = [
+      { label: "To Do", items: projectTasks.filter((item) => item.status === "To Do") },
+      { label: "In Progress", items: projectTasks.filter((item) => item.status === "In Progress" || item.status === "Review") },
+      { label: "Completed", items: projectTasks.filter((item) => item.status === "Done") },
+    ];
+
+    return (
     <>
       <div className="mb-4">
         <Link 
@@ -459,37 +499,48 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
         <div className="flex flex-wrap justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold">{project.name}</h2>
-            <p className="mt-2 text-sm text-slate-500">Due {project.deadline} · Managed by {employees.find((person) => person.id === project.managerId)?.name}</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{project.description}</p>
           </div>
           <StatusBadge status={project.status} />
         </div>
-        <Progress value={project.progress} />
-        <p className="mt-2 text-xs text-slate-500">{project.progress}% complete</p>
-        <h3 className="mt-8 text-sm font-semibold">Tasks</h3>
-        <div className="mt-3 space-y-2">
-          {tasks.filter((task) => task.projectId === project.id).map((task) => (
-            <div key={task.id} className="flex items-center justify-between rounded border border-[#10213b]/10 p-3 text-sm">
-              <div className="flex items-center gap-2">
-                <button 
-                  type="button"
-                  className="cursor-pointer hover:opacity-70" 
-                  onClick={() => {
-                    const newStatus = task.status === "Done" ? "To Do" : "Done";
-                    updateTask(task.id, { status: newStatus });
-                  }}
-                  aria-label={task.status === "Done" ? "Mark as incomplete" : "Mark as complete"}
-                >
-                  <TaskIcon status={task.status} />
-                </button>
-                <span>{task.title}</span>
-              </div>
-              <StatusBadge status={task.priority} />
+        <div className="mt-6 grid gap-4 border-y border-[#10213b]/10 py-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div><p className="text-xs text-slate-500">Overall progress</p><p className="mt-1 text-2xl font-semibold">{calculatedProgress}%</p><Progress value={calculatedProgress} /></div>
+          <div><p className="text-xs text-slate-500">Tasks</p><p className="mt-1 text-2xl font-semibold">{projectTasks.length}</p><p className="text-xs text-slate-500">{completedTasks} completed</p></div>
+          <div><p className="text-xs text-slate-500">Project leader</p><p className="mt-1 font-semibold">{employeeState.find((person) => person.id === project.managerId)?.name ?? "Unassigned"}</p><p className="text-xs text-slate-500">{employeeState.find((person) => person.id === project.managerId)?.title}</p></div>
+          <div><p className="text-xs text-slate-500">Due date</p><p className="mt-1 font-semibold">{project.deadline}</p></div>
+        </div>
+
+        <h3 className="mt-8 text-sm font-semibold">Active Participants</h3>
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          {participatingEmployees.map(({ person, assignedTasks, completed, remaining, percentage }, index) => (
+            <div key={person.id} className="rounded border border-[#10213b]/10 p-4">
+              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">#{index + 1} {person.name}</p><p className="mt-1 text-xs text-slate-500">{person.title}</p></div><p className="text-lg font-semibold text-cyan-700">{percentage}%</p></div>
+              <Progress value={percentage} />
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-500"><span>{assignedTasks.length} assigned</span><span>{completed} completed</span><span>{remaining} remaining</span></div>
             </div>
           ))}
         </div>
+
+        <h3 className="mt-8 text-sm font-semibold">Task Overview</h3>
+        <div className="mt-3 space-y-5">
+          {taskGroups.map((group) => <section key={group.label} aria-labelledby={`project-task-${group.label}`}>
+            <div className="flex items-center justify-between border-b border-[#10213b]/10 pb-2"><h4 id={`project-task-${group.label}`} className="text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h4><span className="text-xs text-slate-400">{group.items.length}</span></div>
+            <div className="mt-2 space-y-2">
+              {group.items.length === 0 ? <p className="px-3 py-2 text-xs text-slate-400">No tasks in this group.</p> : group.items.map((item) => {
+                const assignee = employeeState.find((person) => person.id === item.assigneeId);
+                const completer = employeeState.find((person) => person.id === item.completedBy)?.name ?? assignee?.name;
+                return <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded border border-[#10213b]/10 p-3 text-sm">
+                  <div className="flex items-center gap-2"><button type="button" className="cursor-pointer hover:opacity-70" onClick={() => updateTask(item.id, { status: item.status === "Done" ? "To Do" : "Done" })} aria-label={item.status === "Done" ? "Mark as incomplete" : "Mark as complete"}><TaskIcon status={item.status} /></button><div><p className="font-medium">{item.title}</p><p className="text-xs text-slate-500">{item.status === "Done" ? `Completed by ${completer ?? "the assignee"}` : `Assigned to ${assignee?.name ?? "Unassigned"}`}</p></div></div>
+                  <div className="flex items-center gap-2"><StatusBadge status={item.status} /><StatusBadge status={item.priority} /></div>
+                </div>;
+              })}
+            </div>
+          </section>)}
+        </div>
       </section>
     </>
-  ); 
+  );
+  }
   if (type === "task" && task) return (
     <>
       <div className="mb-4">

@@ -21,7 +21,7 @@ export function DashboardShell({ role, children }: DashboardShellProps) {
   const [session, setSession] = useState<DemoSession | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { notifications } = useDemoData();
+  const { getUnreadNotificationCount } = useDemoData();
   const themeLabel = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function DashboardShell({ role, children }: DashboardShellProps) {
   const navigation = role === "employer" ? employerNav : employeeNav;
   const basePath = role === "employer" ? "/dashboard/employer" : "/dashboard/employee";
   const navigationPaths = role === "employer" ? ["", "/projects", "/tasks", "/employees", "/teams", "/analytics", "/settings"] : ["", "/tasks", "/projects", "/team", "/notifications", "/settings"];
-  const unreadNotifications = notifications.filter((notification) => notification.employeeId === session.email && !notification.read).length;
+  const unreadNotifications = getUnreadNotificationCount(session.email);
   return <div className="theme-dashboard min-h-screen bg-[#f5f7fa] text-[#10213b]">
     <aside className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-[#10213b]/10 bg-[#10213b] px-5 py-6 text-white transition-transform lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
       <div className="flex items-center justify-between"><Link href={role === "employer" ? "/dashboard/employer" : "/dashboard/employee"} className="flex items-center gap-2.5 font-semibold"><span className="flex size-8 items-center justify-center rounded bg-cyan-300 text-[#07101d]"><Layers3 size={17} /></span>NexaFlow</Link><button className="lg:hidden" onClick={() => setMobileOpen(false)} aria-label="Close navigation"><X size={18} /></button></div>
