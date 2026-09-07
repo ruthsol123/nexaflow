@@ -86,10 +86,12 @@ function Modal({
   title,
   children,
   onClose,
+  hideScrollbar = false,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
+  hideScrollbar?: boolean;
 }) {
   return (
     <div
@@ -98,7 +100,7 @@ function Modal({
       aria-modal="true"
       aria-labelledby="dialog-title"
     >
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#10213b]/10 bg-white p-4 shadow-2xl sm:p-6">
+      <div className={`max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#10213b]/10 bg-white p-4 shadow-2xl sm:p-6 ${hideScrollbar ? "hide-scrollbar" : ""}`}>
         <div className="mb-4 flex items-center justify-between gap-4 sm:mb-6">
           <h2
             id="dialog-title"
@@ -934,7 +936,7 @@ function TeamForm({
     );
   }
   return (
-    <Modal title={team ? "Edit team" : "New team"} onClose={onCancel}>
+    <Modal title={team ? "Edit team" : "New team"} onClose={onCancel} hideScrollbar>
       <form className="grid gap-4" onSubmit={submit}>
         <Field label="Team name" error={error}>
           <input
