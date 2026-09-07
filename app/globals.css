@@ -74,6 +74,7 @@ a { color: inherit; text-decoration: none; }
 [data-theme="light"] .theme-auth input { color: #10213b; }
 [data-theme="light"] .theme-auth input::placeholder { color: #94a3b8; }
 [data-theme="light"] .theme-auth .text-cyan-100 { color: #155e75; }
+[data-theme="light"] .theme-auth .auth-submit { color: #ffffff; }
 [data-theme="light"] .theme-auth .text-rose-300 { color: #be123c; }
 [data-theme="dark"] .theme-dashboard { background-color: #070b13; color: #f7fbff; }
 [data-theme="dark"] .theme-dashboard [class*="bg-white"] { background-color: #0d1421; }
