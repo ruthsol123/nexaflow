@@ -4,22 +4,27 @@ export type DemoAccount = {
   email: string;
   password: string;
   role: DemoRole;
+  accountType: "company" | "employee";
   displayName: string;
+  companyName?: string;
+  companySize?: string;
 };
 
-export type DemoSession = Pick<DemoAccount, "email" | "role" | "displayName">;
+export type DemoSession = Pick<DemoAccount, "email" | "role" | "accountType" | "displayName">;
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     email: "employer@nexaflow.demo",
     password: "Employer123!",
     role: "employer",
+    accountType: "company",
     displayName: "Sarah",
   },
   {
     email: "employee@nexaflow.demo",
     password: "Employee123!",
     role: "employee",
+    accountType: "employee",
     displayName: "Alex",
   },
 ];
@@ -32,7 +37,10 @@ export function getDemoAccounts(): DemoAccount[] {
   const rawAccounts = window.localStorage.getItem(CREATED_ACCOUNTS_KEY);
   if (!rawAccounts) return DEMO_ACCOUNTS;
   try {
-    const createdAccounts = JSON.parse(rawAccounts) as DemoAccount[];
+    const createdAccounts = (JSON.parse(rawAccounts) as DemoAccount[]).map((account) => ({
+      ...account,
+      accountType: account.accountType ?? (account.role === "employer" ? "company" : "employee"),
+    }));
     return [...DEMO_ACCOUNTS, ...createdAccounts];
   } catch {
     window.localStorage.removeItem(CREATED_ACCOUNTS_KEY);
@@ -51,6 +59,7 @@ export function saveDemoSession(account: DemoAccount) {
   const session: DemoSession = {
     email: account.email,
     role: account.role,
+    accountType: account.accountType,
     displayName: account.displayName,
   };
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));

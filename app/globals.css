@@ -98,6 +98,20 @@ select option {
 	color: white;
 }
 
+.theme-auth select option { background-color: #ffffff; color: #10213b; }
+[data-theme="dark"] .theme-auth { background-color: #070b13; color: #f7fbff; }
+[data-theme="dark"] .theme-auth .auth-card { border-color: rgba(148, 163, 184, .2); background-color: #0d1421; box-shadow: 0 25px 70px rgba(0, 0, 0, .35); }
+[data-theme="dark"] .theme-auth .auth-label { color: #e2e8f0; }
+[data-theme="dark"] .theme-auth .auth-input { border-color: rgba(148, 163, 184, .3); background-color: #09111e; color: #f7fbff; }
+[data-theme="dark"] .theme-auth .auth-input::placeholder { color: #64748b; }
+[data-theme="dark"] .theme-auth .auth-choice { border-color: rgba(148, 163, 184, .24); background-color: #111c2c; }
+[data-theme="dark"] .theme-auth .auth-choice:hover { border-color: #67e8f9; background-color: #13283a; }
+[data-theme="dark"] .theme-auth .text-slate-950,
+[data-theme="dark"] .theme-auth .text-slate-900 { color: #f7fbff; }
+[data-theme="dark"] .theme-auth .text-slate-700 { color: #cbd5e1; }
+[data-theme="dark"] .theme-auth .text-slate-500 { color: #94a3b8; }
+[data-theme="dark"] .theme-auth select option { background-color: #10213b; color: white; }
+
 /* Smooth transitions for theme switching */
 * {
 	transition-property: color, background-color, border-color;
