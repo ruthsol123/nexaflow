@@ -244,11 +244,11 @@ function TasksView({ role, tasks }: { role: string; tasks: ReturnType<typeof use
 }
 
 function EmployeesView() { 
-  const { employees: employeeState, tasks, projects, createEmployee } = useDemoData(); 
+  const { employees, tasks, projects, createEmployee } = useDemoData(); 
   const [query, setQuery] = useState(""); 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [toast, setToast] = useState("");
-  const filtered = employeeState.filter((employee) => employee.name.toLowerCase().includes(query.toLowerCase()) || employee.department.toLowerCase().includes(query.toLowerCase())); 
+  const filtered = employees.filter((employee) => employee.name.toLowerCase().includes(query.toLowerCase()) || employee.title.toLowerCase().includes(query.toLowerCase())); 
   return (
     <>
       <Header 
@@ -292,7 +292,7 @@ function EmployeesView() {
           ))}
         </div>
       )}
-      {showCreateForm && <CreateEmployeeForm employees={employeeState} createEmployee={createEmployee} onCancel={() => setShowCreateForm(false)} onCreated={() => { setShowCreateForm(false); setToast("Employee created successfully."); window.setTimeout(() => setToast(""), 2400); }} />}
+      {showCreateForm && <CreateEmployeeForm employees={employees} createEmployee={createEmployee} onCancel={() => setShowCreateForm(false)} onCreated={() => { setShowCreateForm(false); setToast("Employee created successfully."); window.setTimeout(() => setToast(""), 2400); }} />}
       {toast && <p className="fixed bottom-5 right-5 z-50 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-medium text-white shadow-lg" role="status">{toast}</p>}
     </>
   );
@@ -421,10 +421,10 @@ function AnalyticsView() {
 }
 
 function DetailView({ type, id, role }: { type: "project" | "task" | "employee" | "team"; id: string; role: string }) {
-  const { projects, tasks, teams, employees: employeeState, updateTask, updateChecklistItem } = useDemoData();
+  const { projects, tasks, teams, employees, updateTask, updateChecklistItem } = useDemoData();
   const project = projects.find((item) => item.id === id);
   const task = tasks.find((item) => item.id === id);
-  const employee = employeeState.find((item) => item.id === id);
+  const employee = employees.find((item) => item.id === id);
   const team = teams.find((item) => item.id === id);
   if (type === "team" && team) return (
     <>
@@ -438,12 +438,12 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
       </div>
       <Header 
         eyebrow="Team detail" 
-        subtitle={`${team.name} · led by ${employeeState.find((person) => person.id === team.leadId)?.name}`}
+        subtitle={`${team.name} · led by ${employees.find((person) => person.id === team.leadId)?.name}`}
       />
       <section className={card}>
         <h2 className="text-2xl font-semibold">{team.name}</h2>
         <h3 className="mt-8 text-sm font-semibold">Members</h3>
-        <p className="mt-3 text-sm text-slate-500">{team.memberIds.map((memberId) => employeeState.find((person) => person.id === memberId)?.name).join(" · ")}</p>
+        <p className="mt-3 text-sm text-slate-500">{team.memberIds.map((memberId) => employees.find((person) => person.id === memberId)?.name).join(" · ")}</p>
         <h3 className="mt-8 text-sm font-semibold">Projects</h3>
         <div className="mt-3 space-y-2">
           {team.projectIds.map((projectId) => { 
@@ -467,7 +467,7 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
     const projectTasks = tasks.filter((task) => task.projectId === project.id);
     const completedTasks = projectTasks.filter((task) => task.status === "Done").length;
     const calculatedProgress = projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0;
-    const participatingEmployees = employeeState
+    const participatingEmployees = employees
       .filter((person) => project.memberIds.includes(person.id) || projectTasks.some((item) => item.assigneeId === person.id))
       .map((person) => {
         const assignedTasks = projectTasks.filter((item) => item.assigneeId === person.id);
@@ -475,11 +475,6 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
         return { person, assignedTasks, completed, remaining: assignedTasks.length - completed, percentage: assignedTasks.length ? Math.round(completed / assignedTasks.length * 100) : 0 };
       })
       .sort((a, b) => b.percentage - a.percentage || a.person.name.localeCompare(b.person.name));
-    const taskGroups = [
-      { label: "To Do", items: projectTasks.filter((item) => item.status === "To Do") },
-      { label: "In Progress", items: projectTasks.filter((item) => item.status === "In Progress" || item.status === "Review") },
-      { label: "Completed", items: projectTasks.filter((item) => item.status === "Done") },
-    ];
 
     return (
     <>
@@ -506,36 +501,130 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
         <div className="mt-6 grid gap-4 border-y border-[#10213b]/10 py-5 sm:grid-cols-2 lg:grid-cols-4">
           <div><p className="text-xs text-slate-500">Overall progress</p><p className="mt-1 text-2xl font-semibold">{calculatedProgress}%</p><Progress value={calculatedProgress} /></div>
           <div><p className="text-xs text-slate-500">Tasks</p><p className="mt-1 text-2xl font-semibold">{projectTasks.length}</p><p className="text-xs text-slate-500">{completedTasks} completed</p></div>
-          <div><p className="text-xs text-slate-500">Project leader</p><p className="mt-1 font-semibold">{employeeState.find((person) => person.id === project.managerId)?.name ?? "Unassigned"}</p><p className="text-xs text-slate-500">{employeeState.find((person) => person.id === project.managerId)?.title}</p></div>
+          <div><p className="text-xs text-slate-500">Project leader</p><p className="mt-1 font-semibold">{employees.find((person) => person.id === project.managerId)?.name ?? "Unassigned"}</p><p className="text-xs text-slate-500">{employees.find((person) => person.id === project.managerId)?.title}</p></div>
           <div><p className="text-xs text-slate-500">Due date</p><p className="mt-1 font-semibold">{project.deadline}</p></div>
         </div>
 
-        <h3 className="mt-8 text-sm font-semibold">Active Participants</h3>
-        <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          {participatingEmployees.map(({ person, assignedTasks, completed, remaining, percentage }, index) => (
+        <h3 className="mt-8 text-sm font-semibold">Project Participants</h3>
+        <div className="mt-3 space-y-4">
+          {participatingEmployees.map(({ person, assignedTasks, completed, remaining, percentage }) => (
             <div key={person.id} className="rounded border border-[#10213b]/10 p-4">
-              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">#{index + 1} {person.name}</p><p className="mt-1 text-xs text-slate-500">{person.title}</p></div><p className="text-lg font-semibold text-cyan-700">{percentage}%</p></div>
-              <Progress value={percentage} />
-              <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-500"><span>{assignedTasks.length} assigned</span><span>{completed} completed</span><span>{remaining} remaining</span></div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-[#bfd8df] text-sm font-semibold text-[#10213b]">
+                    {person.name.split(" ").map((part) => part[0]).join("")}
+                  </span>
+                  <div>
+                    <p className="font-medium">{person.name}</p>
+                    <p className="text-xs text-slate-500">{person.title}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-semibold">{percentage}%</p>
+                </div>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-slate-100">
+                <div 
+                  className="h-2 rounded-full bg-[#4bb7c8] transition-all duration-300" 
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-4 text-xs text-slate-500">
+                <div>
+                  <p className="font-semibold text-[#10213b]">{assignedTasks.length}</p>
+                  <p>Assigned Tasks</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-emerald-600">{completed}</p>
+                  <p>Completed</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-amber-600">{remaining}</p>
+                  <p>Remaining</p>
+                </div>
+              </div>
             </div>
           ))}
+          {participatingEmployees.length === 0 && (
+            <p className="text-sm text-slate-500">No participants assigned to this project yet.</p>
+          )}
         </div>
-
-        <h3 className="mt-8 text-sm font-semibold">Task Overview</h3>
-        <div className="mt-3 space-y-5">
-          {taskGroups.map((group) => <section key={group.label} aria-labelledby={`project-task-${group.label}`}>
-            <div className="flex items-center justify-between border-b border-[#10213b]/10 pb-2"><h4 id={`project-task-${group.label}`} className="text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h4><span className="text-xs text-slate-400">{group.items.length}</span></div>
-            <div className="mt-2 space-y-2">
-              {group.items.length === 0 ? <p className="px-3 py-2 text-xs text-slate-400">No tasks in this group.</p> : group.items.map((item) => {
-                const assignee = employeeState.find((person) => person.id === item.assigneeId);
-                const completer = employeeState.find((person) => person.id === item.completedBy)?.name ?? assignee?.name;
-                return <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded border border-[#10213b]/10 p-3 text-sm">
-                  <div className="flex items-center gap-2"><button type="button" className="cursor-pointer hover:opacity-70" onClick={() => updateTask(item.id, { status: item.status === "Done" ? "To Do" : "Done" })} aria-label={item.status === "Done" ? "Mark as incomplete" : "Mark as complete"}><TaskIcon status={item.status} /></button><div><p className="font-medium">{item.title}</p><p className="text-xs text-slate-500">{item.status === "Done" ? `Completed by ${completer ?? "the assignee"}` : `Assigned to ${assignee?.name ?? "Unassigned"}`}</p></div></div>
-                  <div className="flex items-center gap-2"><StatusBadge status={item.status} /><StatusBadge status={item.priority} /></div>
-                </div>;
-              })}
+        
+        <h3 className="mt-8 text-sm font-semibold">Project Participants</h3>
+        <div className="mt-3 space-y-4">
+          {participatingEmployees.map(({ person, assignedTasks, completed, remaining, percentage }) => (
+            <div key={person.id} className="rounded border border-[#10213b]/10 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-[#bfd8df] text-sm font-semibold text-[#10213b]">
+                    {person.name.split(" ").map((part) => part[0]).join("")}
+                  </span>
+                  <div>
+                    <p className="font-medium">{person.name}</p>
+                    <p className="text-xs text-slate-500">{person.title}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-semibold">{percentage}%</p>
+                </div>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-slate-100">
+                <div 
+                  className="h-2 rounded-full bg-[#4bb7c8] transition-all duration-300" 
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-4 text-xs text-slate-500">
+                <div>
+                  <p className="font-semibold text-[#10213b]">{assignedTasks.length}</p>
+                  <p>Assigned Tasks</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-emerald-600">{completed}</p>
+                  <p>Completed</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-amber-600">{remaining}</p>
+                  <p>Remaining</p>
+                </div>
+              </div>
             </div>
-          </section>)}
+          ))}
+          {participatingEmployees.length === 0 && (
+            <p className="text-sm text-slate-500">No participants assigned to this project yet.</p>
+          )}
+        </div>
+        
+        <h3 className="mt-8 text-sm font-semibold">Project Tasks</h3>
+        <div className="mt-3 space-y-2">
+          {projectTasks.map((task) => (
+            <div key={task.id} className="flex items-center justify-between rounded border border-[#10213b]/10 p-3 text-sm">
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  className="cursor-pointer hover:opacity-70" 
+                  onClick={() => {
+                    const newStatus = task.status === "Done" ? "To Do" : "Done";
+                    updateTask(task.id, { status: newStatus });
+                  }}
+                  aria-label={task.status === "Done" ? "Mark as incomplete" : "Mark as complete"}
+                >
+                  <TaskIcon status={task.status} />
+                </button>
+                <div>
+                  <span>{task.title}</span>
+                  <p className="text-xs text-slate-500">Assigned to {employees.find((e) => e.id === task.assigneeId)?.name} · {employees.find((e) => e.id === task.assigneeId)?.title}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <StatusBadge status={task.status} />
+                <StatusBadge status={task.priority} />
+              </div>
+            </div>
+          ))}
+          {projectTasks.length === 0 && (
+            <p className="text-sm text-slate-500">No tasks assigned to this project yet.</p>
+          )}
         </div>
       </section>
     </>
