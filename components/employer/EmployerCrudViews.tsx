@@ -862,11 +862,63 @@ function TeamForm({
   onCancel: () => void;
   onSave: (team: Omit<Team, "id">, id?: string) => void;
 }) {
+  const { employees: availableEmployees } = useDemoData();
   const [error, setError] = useState("");
+  const [members, setMembers] = useState(() =>
+    (team?.memberIds ?? []).map((employeeId) => ({
+      employeeId,
+      role: team?.memberRoles?.[employeeId] ?? availableEmployees.find((employee) => employee.id === employeeId)?.title ?? "",
+    })),
+  );
+  const [employeeId, setEmployeeId] = useState("");
+  const [role, setRole] = useState("");
+  const [customRole, setCustomRole] = useState("");
+  const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
+  const roleOptions = [
+    "Frontend Developer",
+    "Backend Developer",
+    "Full-Stack Developer",
+    "UI/UX Designer",
+    "Team Lead",
+    "Project Manager",
+    "QA Engineer",
+    "DevOps Engineer",
+    "Product Manager",
+  ];
+
+  function resetMemberEditor() {
+    setEmployeeId("");
+    setRole("");
+    setCustomRole("");
+    setEditingEmployeeId(null);
+  }
+
+  function addOrUpdateMember() {
+    const selectedRole = role === "Custom Role" ? customRole.trim() : role;
+    if (!employeeId) return setError("Select an employee before adding a member.");
+    if (!selectedRole) return setError("Select a role or enter a custom role.");
+    if (members.some((member) => member.employeeId === employeeId && member.employeeId !== editingEmployeeId)) {
+      return setError("That employee is already on this team.");
+    }
+    setMembers((current) => editingEmployeeId
+      ? current.map((member) => member.employeeId === editingEmployeeId ? { employeeId, role: selectedRole } : member)
+      : [...current, { employeeId, role: selectedRole }]);
+    setError("");
+    resetMemberEditor();
+  }
+
+  function editMember(member: { employeeId: string; role: string }) {
+    setEmployeeId(member.employeeId);
+    setRole(roleOptions.includes(member.role) ? member.role : "Custom Role");
+    setCustomRole(roleOptions.includes(member.role) ? "" : member.role);
+    setEditingEmployeeId(member.employeeId);
+    setError("");
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const memberIds = form.getAll("memberIds").map(String);
+    const memberIds = members.map((member) => member.employeeId);
     if (!String(form.get("name")).trim() || !memberIds.length)
       return setError("Team name and at least one member are required.");
     onSave(
@@ -876,7 +928,7 @@ function TeamForm({
         leadId: String(form.get("leadId")),
         memberIds,
         projectIds: team?.projectIds ?? [],
-        memberRoles: team?.memberRoles,
+        memberRoles: Object.fromEntries(members.map((member) => [member.employeeId, member.role])),
       },
       team?.id,
     );
@@ -909,19 +961,36 @@ function TeamForm({
             ))}
           </select>
         </Field>
-        <Field label="Members">
-          <select
-            className={`${input} min-h-32`}
-            name="memberIds"
-            multiple
-            defaultValue={team?.memberIds}
-          >
-            {employees.map((employee) => (
-              <option value={employee.id} key={employee.id}>
-                {employee.name}
-              </option>
-            ))}
-          </select>
+        <Field label="Members" error={error}>
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-[1fr_1fr]">
+              <select className={input} value={employeeId} onChange={(event) => setEmployeeId(event.target.value)} aria-label="Select employee">
+                <option value="">Select employee</option>
+                {availableEmployees.filter((employee) => !members.some((member) => member.employeeId === employee.id) || employee.id === editingEmployeeId).map((employee) => (
+                  <option value={employee.id} key={employee.id}>{employee.name}</option>
+                ))}
+              </select>
+              <select className={input} value={role} onChange={(event) => setRole(event.target.value)} aria-label="Select role">
+                <option value="">Select role</option>
+                {roleOptions.map((option) => <option key={option}>{option}</option>)}
+                <option>Custom Role</option>
+              </select>
+            </div>
+            {role === "Custom Role" && <input className={input} value={customRole} onChange={(event) => setCustomRole(event.target.value)} placeholder="Enter custom role" aria-label="Custom role" />}
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" onClick={addOrUpdateMember}>{editingEmployeeId ? "Update Member" : "+ Add Member"}</Button>
+              {editingEmployeeId && <Button type="button" secondary onClick={resetMemberEditor}>Cancel edit</Button>}
+            </div>
+            <div className="space-y-2">
+              {members.map((member) => {
+                const employee = availableEmployees.find((candidate) => candidate.id === member.employeeId);
+                return employee ? <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-[#10213b]/10 px-3 py-2" key={member.employeeId}>
+                  <div><p className="text-sm font-medium">{employee.name}</p><p className="text-xs text-slate-500">{member.role}</p></div>
+                  <div className="flex gap-3 text-xs font-medium"><button type="button" className="text-cyan-700 hover:underline" onClick={() => editMember(member)}>Edit</button><button type="button" className="text-rose-600 hover:underline" onClick={() => { setMembers((current) => current.filter((item) => item.employeeId !== member.employeeId)); if (editingEmployeeId === member.employeeId) resetMemberEditor(); }}>Remove</button></div>
+                </div> : null;
+              })}
+            </div>
+          </div>
         </Field>
         <div className="flex justify-end gap-3">
           <Button secondary onClick={onCancel}>
