@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, ReactNode, useState, useEffect } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { useDemoData } from "@/lib/demo-data/DemoDataProvider";
@@ -421,17 +422,59 @@ function AnalyticsView() {
 }
 
 function DetailView({ type, id, role }: { type: "project" | "task" | "employee" | "team"; id: string; role: string }) {
-  const { projects, tasks, teams, employees, updateTask, updateChecklistItem } = useDemoData();
+  const { projects, tasks, teams, employees, updateTask, updateChecklistItem, updateTeam, deleteTeam } = useDemoData();
+  const router = useRouter();
   const project = projects.find((item) => item.id === id);
   const task = tasks.find((item) => item.id === id);
   const employee = employees.find((item) => item.id === id);
   const team = teams.find((item) => item.id === id);
-  if (type === "team" && team) return (
+  if (type === "team" && team) {
+    const currentTeam = team;
+    const memberIds = new Set(currentTeam.memberIds);
+    const teamTasks = tasks.filter((item) => memberIds.has(item.assigneeId));
+    const completedTasks = teamTasks.filter((item) => item.status === "Done").length;
+    const remainingTasks = teamTasks.length - completedTasks;
+    const teamActivity = teamTasks.length ? Math.round((completedTasks / teamTasks.length) * 100) : 0;
+    const members = currentTeam.memberIds
+      .map((memberId) => employees.find((person) => person.id === memberId))
+      .filter((person): person is Employee => Boolean(person))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((person) => {
+        const assignedTasks = tasks.filter((item) => item.assigneeId === person.id);
+        const completed = assignedTasks.filter((item) => item.status === "Done").length;
+        return { person, assigned: assignedTasks.length, completed, remaining: assignedTasks.length - completed, activity: assignedTasks.length ? Math.round((completed / assignedTasks.length) * 100) : 0 };
+      });
+    const availableEmployees = employees.filter((person) => !memberIds.has(person.id));
+    const roleOptions = ["Frontend Developer", "Backend Developer", "Team Lead", "Project Manager", "UI/UX Designer", "QA Engineer", "Growth Lead"];
+
+    function addMember(event: FormEvent<HTMLFormElement>) {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const employeeId = String(form.get("employeeId") || "");
+      const memberRole = String(form.get("memberRole") || "");
+      if (!employeeId || !memberRole || memberIds.has(employeeId)) return;
+      updateTeam(currentTeam.id, { memberIds: [...currentTeam.memberIds, employeeId], memberRoles: { ...currentTeam.memberRoles, [employeeId]: memberRole } });
+      event.currentTarget.reset();
+    }
+
+    function removeMember(employeeId: string) {
+      const nextRoles = { ...currentTeam.memberRoles };
+      delete nextRoles[employeeId];
+      updateTeam(currentTeam.id, { memberIds: currentTeam.memberIds.filter((memberId) => memberId !== employeeId), memberRoles: nextRoles });
+    }
+
+    function removeTeam() {
+      if (!window.confirm(`Delete ${currentTeam.name}? Employees, projects, and tasks will be kept.`)) return;
+      deleteTeam(currentTeam.id);
+      router.push("/dashboard/employer/teams");
+    }
+
+    return (
     <>
       <div className="mb-4">
         <Link 
           className="inline-flex items-center text-sm text-cyan-700 hover:underline" 
-          href={`${role === "employer" ? "/dashboard/employer" : "/dashboard/employee"}/team`}
+          href={`${role === "employer" ? "/dashboard/employer" : "/dashboard/employee"}/${role === "employer" ? "teams" : "team"}`}
         >
           ← {role === "employer" ? "Back to Teams" : "Back to My Team"}
         </Link>
@@ -439,11 +482,35 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
       <Header 
         eyebrow="Team detail" 
         subtitle={`${team.name} · led by ${employees.find((person) => person.id === team.leadId)?.name}`}
+        action={role === "employer" ? <button className="rounded-lg border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50" onClick={removeTeam}>Delete Team</button> : undefined}
       />
       <section className={card}>
-        <h2 className="text-2xl font-semibold">{team.name}</h2>
-        <h3 className="mt-8 text-sm font-semibold">Members</h3>
-        <p className="mt-3 text-sm text-slate-500">{team.memberIds.map((memberId) => employees.find((person) => person.id === memberId)?.name).join(" · ")}</p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div><h2 className="text-2xl font-semibold">{team.name}</h2><p className="mt-2 text-sm text-slate-500">{team.description}</p></div>
+          <div className="text-right"><p className="text-xs text-slate-500">Team activity</p><p className="mt-1 text-2xl font-semibold">{teamActivity}%</p></div>
+        </div>
+        <div className="mt-6 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-[#4bb7c8] transition-all duration-300" style={{ width: `${teamActivity}%` }} /></div>
+        <div className="mt-6 grid grid-cols-2 gap-4 border-y border-[#10213b]/10 py-5 sm:grid-cols-4">
+          <div><p className="text-xs text-slate-500">Members</p><p className="mt-1 text-xl font-semibold">{members.length}</p></div>
+          <div><p className="text-xs text-slate-500">Assigned tasks</p><p className="mt-1 text-xl font-semibold">{teamTasks.length}</p></div>
+          <div><p className="text-xs text-slate-500">Completed</p><p className="mt-1 text-xl font-semibold text-emerald-600">{completedTasks}</p></div>
+          <div><p className="text-xs text-slate-500">Remaining</p><p className="mt-1 text-xl font-semibold text-amber-600">{remainingTasks}</p></div>
+        </div>
+        <div className="mt-8 flex items-center justify-between gap-3"><h3 className="text-sm font-semibold">Team members</h3><span className="text-xs text-slate-500">Sorted alphabetically</span></div>
+        <div className="mt-3 space-y-3">
+          {members.map(({ person, assigned, completed, remaining, activity }) => (
+            <div className="rounded border border-[#10213b]/10 p-4" key={person.id}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-full bg-[#bfd8df] text-sm font-semibold text-[#10213b]">{person.name.split(" ").map((part) => part[0]).join("")}</span><div><p className="font-medium">{person.name}</p><p className="text-xs text-slate-500">{team.memberRoles?.[person.id] || person.title}</p></div></div>
+                <div className="flex items-center gap-3"><span className="text-lg font-semibold">{activity}%</span>{role === "employer" && <button className="text-xs font-medium text-rose-600 hover:underline" onClick={() => removeMember(person.id)}>Remove</button>}</div>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-[#4bb7c8] transition-all duration-300" style={{ width: `${activity}%` }} /></div>
+              <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-slate-500"><span><b className="block text-[#10213b]">{assigned}</b>Assigned</span><span><b className="block text-emerald-600">{completed}</b>Completed</span><span><b className="block text-amber-600">{remaining}</b>Remaining</span></div>
+            </div>
+          ))}
+          {members.length === 0 && <p className="text-sm text-slate-500">No members are assigned to this team yet.</p>}
+        </div>
+        {role === "employer" && <form className="mt-5 grid gap-3 rounded border border-dashed border-[#10213b]/15 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onSubmit={addMember}><label className="text-xs font-medium text-slate-600">Employee<select className={input} name="employeeId" required disabled={!availableEmployees.length}><option value="">Select employee</option>{availableEmployees.map((person) => <option value={person.id} key={person.id}>{person.name}</option>)}</select></label><label className="text-xs font-medium text-slate-600">Team role<select className={input} name="memberRole" required><option value="">Select role</option>{roleOptions.map((option) => <option key={option}>{option}</option>)}</select></label><button className="rounded-lg bg-[#10213b] px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={!availableEmployees.length}>Add Member</button></form>}
         <h3 className="mt-8 text-sm font-semibold">Projects</h3>
         <div className="mt-3 space-y-2">
           {team.projectIds.map((projectId) => { 
@@ -462,7 +529,8 @@ function DetailView({ type, id, role }: { type: "project" | "task" | "employee" 
         </div>
       </section>
     </>
-  ); 
+    );
+  }
   if (type === "project" && project) {
     const projectTasks = tasks.filter((task) => task.projectId === project.id);
     const completedTasks = projectTasks.filter((task) => task.status === "Done").length;

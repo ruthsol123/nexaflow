@@ -15,7 +15,8 @@ import {
 import { StatusBadge } from "@/components/dashboard/DashboardPrimitives";
 
 const card = "border border-[#10213b]/10 bg-white p-5";
-const input = "mt-1 w-full rounded-lg border border-[#10213b]/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/15";
+const input =
+  "mt-1 w-full rounded-lg border border-[#10213b]/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/15";
 const statuses: TaskStatus[] = ["To Do", "In Progress", "Review", "Done"];
 const projectStatuses: ProjectStatus[] = [
   "Planning",
@@ -279,9 +280,16 @@ export function EmployerProjectsView() {
               <Progress value={project.progress} />
               <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-500">
                 <span>Due {project.deadline}</span>
-                <span>{tasks.filter((task) => task.projectId === project.id).length} tasks</span>
                 <span>
-                  Manager {employees.find((person) => person.id === project.managerId)?.name}
+                  {tasks.filter((task) => task.projectId === project.id).length}{" "}
+                  tasks
+                </span>
+                <span>
+                  Manager{" "}
+                  {
+                    employees.find((person) => person.id === project.managerId)
+                      ?.name
+                  }
                 </span>
                 <span>{project.memberIds.length} members</span>
               </div>
@@ -714,7 +722,7 @@ function TaskForm({
 }
 
 export function EmployerTeamsView() {
-  const { teams, createTeam, updateTeam, deleteTeam, projects } = useDemoData();
+  const { teams, employees, createTeam, updateTeam, deleteTeam, projects } = useDemoData();
   const [editing, setEditing] = useState<Team | null>(null);
   const [deleting, setDeleting] = useState<Team | null>(null);
   const [query, setQuery] = useState("");
@@ -763,7 +771,7 @@ export function EmployerTeamsView() {
             team.name.toLowerCase().includes(query.toLowerCase()),
           )
           .map((team) => (
-            <article className={card} key={team.id}>
+            <Link className={`${card} block transition hover:border-cyan-400`} href={`/dashboard/employer/teams/${team.id}`} key={team.id}>
               <div className="flex justify-between gap-3">
                 <div>
                   <h2 className="font-semibold">{team.name}</h2>
@@ -777,14 +785,16 @@ export function EmployerTeamsView() {
                   </summary>
                   <div className="absolute right-0 z-10 mt-1 w-24 rounded-lg border bg-white p-1 shadow-lg">
                     <button
+                      type="button"
                       className="block w-full px-3 py-2 text-left text-xs"
-                      onClick={() => setEditing(team)}
+                      onClick={(event) => { event.preventDefault(); setEditing(team); }}
                     >
                       Edit
                     </button>
                     <button
+                      type="button"
                       className="block w-full px-3 py-2 text-left text-xs text-rose-600"
-                      onClick={() => setDeleting(team)}
+                      onClick={(event) => { event.preventDefault(); setDeleting(team); }}
                     >
                       Delete
                     </button>
@@ -812,7 +822,7 @@ export function EmployerTeamsView() {
                 )}
                 % average progress
               </p>
-            </article>
+            </Link>
           ))}
       </div>
       {editing && (
@@ -866,6 +876,7 @@ function TeamForm({
         leadId: String(form.get("leadId")),
         memberIds,
         projectIds: team?.projectIds ?? [],
+        memberRoles: team?.memberRoles,
       },
       team?.id,
     );

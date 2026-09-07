@@ -6,7 +6,7 @@ export type Employee = { id: string; name: string; email: string; title: string;
 export type Project = { id: string; name: string; description: string; status: ProjectStatus; progress: number; startDate: string; deadline: string; managerId: string; teamId: string; memberIds: string[] };
 export type ChecklistItem = { id: string; text: string; completed: boolean };
 export type Task = { id: string; title: string; description: string; projectId: string; assigneeId: string; priority: Priority; status: TaskStatus; dueDate: string; checklist: ChecklistItem[]; completedBy?: string; completedAt?: string; reviewStatus?: TaskReviewStatus; reviewedBy?: string; reviewedAt?: string; reviewFeedback?: string };
-export type Team = { id: string; name: string; description: string; leadId: string; memberIds: string[]; projectIds: string[] };
+export type Team = { id: string; name: string; description: string; leadId: string; memberIds: string[]; projectIds: string[]; memberRoles?: Record<string, string> };
 export type Notification = { id: string; employeeId: string; message: string; detail: string; read: boolean; createdAt: string; taskId?: string; action?: "review" | "view" };
 export type Activity = { id: string; actorId: string; message: string; projectId?: string; createdAt: string };
 
