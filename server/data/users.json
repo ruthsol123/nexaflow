@@ -1,0 +1,80 @@
+[
+  {
+    "id": "sarah",
+    "companyId": "company-demo",
+    "fullName": "Sarah Johnson",
+    "name": "Sarah Johnson",
+    "email": "employer@nexaflow.demo",
+    "role": "employer",
+    "title": "CEO",
+    "department": "Executive",
+    "status": "Active",
+    "teamId": "executive",
+    "passwordHash": "$2b$10$IxhLA6SzP.YE80jeASBhDeSDIRdp/RqHx2mq/qkOO7OqRoAazfRza"
+  },
+  {
+    "id": "alex",
+    "companyId": "company-demo",
+    "fullName": "Alex Morgan",
+    "name": "Alex Morgan",
+    "email": "employee@nexaflow.demo",
+    "role": "employee",
+    "title": "Frontend Developer",
+    "department": "Engineering",
+    "status": "Active",
+    "teamId": "engineering",
+    "passwordHash": "$2b$10$bABrgbw/MnuZBNlPC/H2neufkRwulr3kHxF8Nt7VftWERMUE5X1Qu"
+  },
+  {
+    "id": "daniel",
+    "companyId": "company-demo",
+    "fullName": "Daniel Kim",
+    "name": "Daniel Kim",
+    "email": "daniel@nexaflow.demo",
+    "role": "employee",
+    "title": "Backend Developer",
+    "department": "Engineering",
+    "status": "Active",
+    "teamId": "engineering",
+    "passwordHash": "$2b$10$bABrgbw/MnuZBNlPC/H2neufkRwulr3kHxF8Nt7VftWERMUE5X1Qu"
+  },
+  {
+    "id": "maya",
+    "companyId": "company-demo",
+    "fullName": "Maya Chen",
+    "name": "Maya Chen",
+    "email": "maya@nexaflow.demo",
+    "role": "employee",
+    "title": "UI/UX Designer",
+    "department": "Design",
+    "status": "Active",
+    "teamId": "design",
+    "passwordHash": "$2b$10$bABrgbw/MnuZBNlPC/H2neufkRwulr3kHxF8Nt7VftWERMUE5X1Qu"
+  },
+  {
+    "id": "riley",
+    "companyId": "company-demo",
+    "fullName": "Riley Stone",
+    "name": "Riley Stone",
+    "email": "riley@nexaflow.demo",
+    "role": "employee",
+    "title": "Product Manager",
+    "department": "Product",
+    "status": "Away",
+    "teamId": "product",
+    "passwordHash": "$2b$10$bABrgbw/MnuZBNlPC/H2neufkRwulr3kHxF8Nt7VftWERMUE5X1Qu"
+  },
+  {
+    "id": "jordan",
+    "companyId": "company-demo",
+    "fullName": "Jordan Lee",
+    "name": "Jordan Lee",
+    "email": "jordan@nexaflow.demo",
+    "role": "employee",
+    "title": "Growth Lead",
+    "department": "Marketing",
+    "status": "Active",
+    "teamId": "marketing",
+    "passwordHash": "$2b$10$bABrgbw/MnuZBNlPC/H2neufkRwulr3kHxF8Nt7VftWERMUE5X1Qu"
+  }
+]

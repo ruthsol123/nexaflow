@@ -1,0 +1,66 @@
+[
+  {
+    "id": "website",
+    "companyId": "company-demo",
+    "name": "NexaFlow Website",
+    "description": "A clearer, faster marketing experience for modern teams.",
+    "status": "Active",
+    "startDate": "2026-07-01",
+    "deadline": "2026-08-30",
+    "leader": "riley",
+    "managerId": "riley",
+    "teamId": "engineering",
+    "participants": [
+      "alex",
+      "daniel",
+      "maya"
+    ],
+    "memberIds": [
+      "alex",
+      "daniel",
+      "maya"
+    ]
+  },
+  {
+    "id": "mobile",
+    "companyId": "company-demo",
+    "name": "Mobile Application",
+    "description": "Bring the workspace to every team member on the move.",
+    "status": "Active",
+    "startDate": "2026-07-15",
+    "deadline": "2026-09-12",
+    "leader": "riley",
+    "managerId": "riley",
+    "teamId": "engineering",
+    "participants": [
+      "alex",
+      "jordan"
+    ],
+    "memberIds": [
+      "alex",
+      "jordan"
+    ]
+  },
+  {
+    "id": "travel",
+    "companyId": "company-demo",
+    "name": "Travel Platform",
+    "description": "A flexible booking workflow for distributed teams.",
+    "status": "Active",
+    "startDate": "2026-06-15",
+    "deadline": "2026-09-05",
+    "leader": "riley",
+    "managerId": "riley",
+    "teamId": "product",
+    "participants": [
+      "maya",
+      "riley",
+      "daniel"
+    ],
+    "memberIds": [
+      "maya",
+      "riley",
+      "daniel"
+    ]
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "executive",
+    "companyId": "company-demo",
+    "name": "Executive",
+    "description": "Lead company vision.",
+    "leadId": "sarah",
+    "memberIds": [
+      "sarah"
+    ],
+    "memberRoles": {
+      "sarah": "Team Lead"
+    },
+    "projectIds": [
+      "website",
+      "mobile",
+      "travel"
+    ]
+  },
+  {
+    "id": "engineering",
+    "companyId": "company-demo",
+    "name": "Engineering",
+    "description": "Build NexaFlow.",
+    "leadId": "daniel",
+    "memberIds": [
+      "alex",
+      "daniel"
+    ],
+    "memberRoles": {
+      "alex": "Frontend Developer",
+      "daniel": "Backend Developer"
+    },
+    "projectIds": [
+      "website",
+      "mobile"
+    ]
+  },
+  {
+    "id": "design",
+    "companyId": "company-demo",
+    "name": "Product Design",
+    "description": "Shape the product.",
+    "leadId": "maya",
+    "memberIds": [
+      "alex",
+      "maya"
+    ],
+    "memberRoles": {
+      "alex": "Frontend Developer",
+      "maya": "UI/UX Designer"
+    },
+    "projectIds": [
+      "website",
+      "mobile"
+    ]
+  },
+  {
+    "id": "product",
+    "companyId": "company-demo",
+    "name": "Product",
+    "description": "Connect needs to delivery.",
+    "leadId": "riley",
+    "memberIds": [
+      "riley"
+    ],
+    "memberRoles": {
+      "riley": "Product Manager"
+    },
+    "projectIds": [
+      "travel"
+    ]
+  }
+]

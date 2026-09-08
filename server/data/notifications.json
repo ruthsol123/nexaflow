@@ -1,0 +1,26 @@
+[
+  {
+    "id": "n1",
+    "companyId": "company-demo",
+    "recipientId": "alex",
+    "type": "task_assigned",
+    "message": "You were assigned a new task",
+    "relatedTaskId": "dashboard",
+    "relatedProjectId": "website",
+    "relatedEmployeeId": "alex",
+    "read": false,
+    "createdAt": "2026-09-08T09:58:39.427Z"
+  },
+  {
+    "id": "n2",
+    "companyId": "company-demo",
+    "recipientId": "sarah",
+    "type": "task_completed",
+    "message": "Alex Morgan completed a task",
+    "relatedTaskId": "mobile-nav",
+    "relatedProjectId": "mobile",
+    "relatedEmployeeId": "alex",
+    "read": false,
+    "createdAt": "2026-09-08T09:58:39.428Z"
+  }
+]
