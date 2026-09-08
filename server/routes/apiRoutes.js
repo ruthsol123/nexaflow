@@ -3,7 +3,7 @@ const { body, param } = require("express-validator");
 const auth = require("../controllers/authController");
 const api = require("../controllers/apiController");
 const { authenticateUser, requireEmployer } = require("../middleware/auth");
-const { email, password, validate } = require("../utils/validation");
+const { email, password, passwordRules, validate } = require("../utils/validation");
 
 const router = express.Router();
 const protectedRouter = express.Router();
@@ -19,7 +19,7 @@ protectedRouter.get("/auth/me", auth.me);
 protectedRouter.post("/users/employees", requireEmployer, [body("fullName").optional().trim().isLength({ min: 2 }), body("name").optional().trim().isLength({ min: 2 }), email("email"), password(), validate], api.createEmployee);
 protectedRouter.get("/users/employees", requireEmployer, api.listEmployees);
 protectedRouter.get("/users/employees/:id", requireEmployer, idValidation, validate, api.employee);
-protectedRouter.patch("/users/employees/:id", requireEmployer, idValidation, validate, api.updateEmployee);
+protectedRouter.patch("/users/employees/:id", requireEmployer, idValidation, body("password").optional().isString().matches(passwordRules).withMessage("Password must be at least 8 characters and include uppercase, lowercase, number, and special character."), validate, api.updateEmployee);
 protectedRouter.delete("/users/employees/:id", requireEmployer, idValidation, validate, api.deleteEmployee);
 
 protectedRouter.post("/teams", requireEmployer, api.teamCreate);

@@ -7,6 +7,7 @@
     "server": "nodemon server/server.js",
     "server:dev": "nodemon server/server.js",
     "test:backend": "node server/tests/e2e.js",
+    "test:passwords": "node server/tests/passwords.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

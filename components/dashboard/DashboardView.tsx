@@ -312,7 +312,7 @@ function CreateEmployeeForm({ employees, createEmployee, onCancel, onCreated }: 
     if (!name || !email || !password || !confirmPassword || !title) return setError("All fields are required.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Please enter a valid email address.");
     if (employees.some((employee) => employee.email.toLowerCase() === email)) return setError("An employee with this email already exists.");
-    if (password.length < 8) return setError("Password must be at least 8 characters.");
+    if (/^\s|\s$/.test(password) || password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) return setError("Password must be at least 8 characters and include uppercase, lowercase, number, and special character.");
     if (password !== confirmPassword) return setError("Passwords do not match.");
     createEmployee({ name, email, title, department: "General", status: "Active", teamId: "" }, password);
     onCreated();
