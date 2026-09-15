@@ -68,7 +68,7 @@ export function Navbar() {
             <div className="hidden items-center gap-4 md:flex lg:gap-5">
               <Link className="text-sm text-slate-300 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50 focus:ring-offset-2 focus:ring-offset-[#070b13] rounded px-2 py-1" href="/login">Log in</Link>
               <button className="rounded-md p-2 text-slate-300 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50 focus:ring-offset-2 focus:ring-offset-[#070b13]" onClick={toggleTheme} aria-label={themeLabel} title={themeLabel}>{theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}</button>
-              <Link className="flex items-center gap-1.5 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-[#07101d] transition hover:bg-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/50 focus:ring-offset-2 focus:ring-offset-[#070b13]" href="/signup">Get Started <ArrowUpRight size={15} /></Link>
+              <Link className="get-started-cta flex items-center gap-1.5 rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold transition hover:bg-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/50 focus:ring-offset-2 focus:ring-offset-[#070b13]" href="/signup">Get Started <ArrowUpRight size={15} /></Link>
             </div>
           </>
         )}
@@ -100,7 +100,7 @@ export function Navbar() {
               Log in
             </Link>
             <Link 
-              className="w-fit rounded-lg bg-cyan-300 px-4 py-2.5 font-semibold text-[#07101d]" 
+              className="get-started-cta w-fit rounded-lg bg-cyan-300 px-4 py-2.5 font-semibold"
               href="/signup" 
               onClick={() => setOpen(false)}
             >
