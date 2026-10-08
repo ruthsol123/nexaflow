@@ -27,7 +27,7 @@ a { color: inherit; text-decoration: none; }
 
 .display-font { font-family: Georgia, "Times New Roman", serif; }
 .page-grid { background-image: linear-gradient(rgba(100, 232, 255, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(100, 232, 255, .045) 1px, transparent 1px); background-size: 56px 56px; }
-.hero-glow { background: radial-gradient(circle at 50% 35%, rgba(36, 129, 255, .2), transparent 32%), radial-gradient(circle at 80% 20%, rgba(100, 232, 255, .08), transparent 22%); }
+.hero-glow { background-color: #08172b; background-image: radial-gradient(circle at 50% 35%, rgba(36, 129, 255, .3), transparent 48%), radial-gradient(circle at 80% 20%, rgba(100, 232, 255, .1), transparent 32%); }
 .blue-text { background: linear-gradient(110deg, var(--cyan), #78a9ff); background-clip: text; color: transparent; }
 .dashboard-shadow { box-shadow: 0 35px 90px rgba(0, 0, 0, .5), 0 0 80px rgba(59, 150, 255, .12); }
 .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
